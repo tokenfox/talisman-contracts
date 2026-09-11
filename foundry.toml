@@ -1,0 +1,27 @@
+[profile.default]
+solc = "0.8.28"
+evm_version = "prague"
+src = "src"
+out = "out"
+libs = ["lib"]
+
+# The renderer/generator carry deep local-variable stacks, so the optimizer
+# only compiles via the IR pipeline. Enabling it brings `Talismans` from
+# ~29.3 KB (unoptimized) to ~15.3 KB — comfortably under the 24,576-byte
+# contract-size limit with room to grow.
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+
+# Only the keys above reach the compiler. They are hashed, together with the
+# remappings in `remappings.txt`, into the metadata of every deployed contract,
+# so changing any of them breaks byte-exact reproduction of code already
+# on-chain.
+
+# A test-harness ceiling, not a compiler setting: the renderer suite renders a
+# full document (SVG + viewer + mesh) once per switch combination, past
+# Foundry's default per-test gas limit of 2^30. tokenURI is a view, so nothing
+# on-chain runs these paths in a transaction.
+gas_limit = 8589934592
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

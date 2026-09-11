@@ -1,0 +1,7 @@
+ds-test/=lib/solidity-trigonometry/lib/forge-std/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+prb-math/=lib/solidity-trigonometry/lib/prb-math/contracts/
+solady/=lib/solady/src/
+solidity-trigonometry/=lib/solidity-trigonometry/src/
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+openzeppelin-contracts/=lib/openzeppelin-contracts/

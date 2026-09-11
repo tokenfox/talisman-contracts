@@ -1,0 +1,12 @@
+# Compiler files
+/cache/
+/out/
+
+# Generated docs (`forge doc`)
+/docs/
+
+# Dotenv file
+.env
+
+# DS_Store
+.DS_Store
