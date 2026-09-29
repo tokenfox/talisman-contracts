@@ -27,7 +27,9 @@ and reproduce.
 ```
 src/          contract sources
 test/         Foundry test suite
-script/       DiagnoseMesh.s.sol — mesh diagnostic imported by the test suite
+script/       libraries imported by the test suite: DiagnoseMesh.s.sol (mesh
+              diagnostic), thevessel/TalismanInCraft.sol and
+              thevessel/VesselRaster.sol (wrap helpers and craft rasteriser)
 foundry.toml  compiler settings (frozen, see below)
 remappings.txt import remappings (frozen, see below)
 foundry.lock  pinned dependency revisions
@@ -51,6 +53,7 @@ lib/          dependencies, as git submodules at pinned revisions
 | `TalismanSvgRendererV3` / `TalismanVertexLitHtmlRenderer` | Its lit SVG image and lit HTML/WebGL viewer |
 | `TalismanLitMaterials` / `TalismanVertexLitViewerScript` | Per-material lighting terms and the viewer's script (libraries) |
 | `TalismanSwapV1` | **Not yet deployed** — see below |
+| `thevessel/TalismanInCraftWrapper` | Holds one Talisman wrapped in a craft of The Vessel until the craft's holder unwraps it — see below |
 
 `Talismans` reads its renderer and materials table through pointers the owner
 can swap (`setRenderer`, `setMaterials`) or freeze forever (`freezeRenderer`,
@@ -73,6 +76,25 @@ and `test/TalismanLitMaterials.t.sol` — are published ahead of activation. Unt
 any deployment, for review. Nothing in this repository should be read as a
 commitment that it will ship, or ship in this form. Everything else under
 `src/` corresponds to code that is already live and immutable.
+
+### `thevessel/` — Talismans wrapped in crafts of The Vessel
+
+`src/thevessel/`, `test/thevessel/` and `script/thevessel/` hold a module that
+builds on the collection without being part of it. A `TalismanInCraftWrapper`
+wraps a Talisman in a Capsule craft of The Vessel
+(`0xECb92Cc7112b80A2234936315BbB493fb48d1463`): its constructor writes the
+Talisman's image and the wrapper's own address into the craft and takes custody
+of the Talisman, and whoever holds the craft can later `unwrap` it once to
+receive the Talisman.
+
+Each wrap deploys its own wrapper, so there is one wrapper contract per wrapped
+Talisman. Every wrapper shares the same runtime bytecode; only the constructor
+arguments differ. The Talismans core contracts do not import the module.
+
+`script/thevessel/TalismanInCraft.sol` and `script/thevessel/VesselRaster.sol`
+are not deployed. They are plain libraries — public mainnet addresses, the
+ERC-721C policy steps and the greyscale rasteriser — published because the
+module's tests import them.
 
 ## Setup
 
@@ -107,8 +129,15 @@ forge test --gas-report
 forge fmt --check          # formatting
 ```
 
-At the revision published here the suite is 682 tests across 28 suites, all
-passing.
+At the revision published here the suite is 741 tests across 30 suites, all
+passing. Two further suites, `test/thevessel/TalismanInCraftWrapperFork.t.sol`
+and `test/thevessel/TalismanInCraftWrapperPolicyFork.t.sol` (23 tests), run the
+wrapper against the live Vessel, Talismans and transfer validator on a mainnet
+fork. They are skipped unless `MAINNET_RPC_URL` is set:
+
+```sh
+MAINNET_RPC_URL=<mainnet-rpc-url> forge test --match-path 'test/thevessel/*Fork*'
+```
 
 ## Reproducing the deployed bytecode
 
@@ -195,6 +224,9 @@ royalties on secondary sales.
   A bug in `Talismans` itself — ownership, commit-reveal, the transformations,
   royalty enforcement — is permanent. Only the renderer, the materials table,
   and the minter sit behind owner-controlled pointers that allow replacement.
+- **A `TalismanInCraftWrapper` holds its Talisman until the craft is
+  unwrapped.** It has no owner and no other way out: whoever holds the craft is
+  the only one who can unwrap, and only once.
 - **`TalismanSwapV1` is unreviewed, unaudited and undeployed.** It is here to be
   read and challenged, not relied on.
 - **The code is published as-is, with no warranty of any kind** (see
